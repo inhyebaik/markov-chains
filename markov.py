@@ -63,12 +63,15 @@ def make_text(chains, number_words):
     # randomly pick an item from its list of values
     # adds last two words of the k-v pair as new current key..do until the key doesn't exist
     current_key = choice(chains.keys())
+    while current_key[0].title() != current_key[0]:
+        current_key = choice(chains.keys())
+
     words = list(current_key)
 
     # print "this is the current key", current_key
     # print "these are the words:", words
     
-    while current_key in chains.keys():
+    while current_key in chains.keys() or len(words) <= 140:
         last_word = choice(chains[current_key])
         words.append(last_word)
         current_key = tuple(words[-number_words:])          
@@ -76,7 +79,11 @@ def make_text(chains, number_words):
 
 
 input_path = sys.argv[1]
-number_words = 4
+files_list = sys.argv
+
+
+
+number_words = 10
 
 # Open the file and turn it into one long string
 input_text = open_and_read_file(input_path)
@@ -84,9 +91,11 @@ input_text = open_and_read_file(input_path)
 # Get a Markov chain
 chains = make_chains(input_text, number_words)
 
-print chains
+#print chains
 
 # Produce random text
 random_text = make_text(chains, number_words)
 
 print random_text
+# print sys.argv
+# print 'these are the text files inputted on the command line', input_path
