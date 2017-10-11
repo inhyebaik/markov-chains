@@ -71,7 +71,7 @@ def make_text(chains, number_words):
     current_length = len(" ".join(words))
     # adds last number_words of the k-v pair as new current key
     # do until the key doesn't exist
-    while current_key in chains.keys() and current_length <= 2000:
+    while current_key in chains.keys() and current_length <= 140:
         last_word = choice(chains[current_key])
         words.append(last_word)
         current_length = len(" ".join(words))
@@ -87,19 +87,30 @@ def output_file(random_text):
 
     Returns nothing
     """
-    output = open("markov-story.out", "w")
-    output.write(random_text)
+    output = open("markov-story.out", "a")
+    output.write(random_text + "\n\n")
     output.close()
     print "Your text is now saved into the output file markov-story."
 
 
 def give_user_choice_of_ngrams(text_string):
     """Shows n-grams from 2-10 and prompts user to select one to return."""
+
+    # Prompt user to choose punctuation to end at. Default is period
+    punct_choice = raw_input("Do you want to end with '.' or '?' \n")
+    if punct_choice not in [".", "?"]:
+        print "Default is looking for something that ends with ."
+        punct_choice = "."
+
     # create dictionary of all ngram options and print so the user can choose.
     ngram_options = {}
     for i in range(2, 11):
         ngram_chains = make_chains(text_string, i)
         ngram_options[i] = make_text(ngram_chains, i)
+
+        #truncate to specified limit (for Twitter: 140 chars), ends punct choice
+        ngram_options[i] = truncate_chars(ngram_options[i], punct_choice, i,
+                                          ngram_chains, text_string)
 
         print "This is a story from a {}-gram:".format(i)
         print "{}".format(ngram_options[i])
@@ -119,11 +130,27 @@ def give_user_choice_of_ngrams(text_string):
             print "You did not enter a number between 2 and 10, try again."
             continue
         break
-    print "You selected {}-gram.".format(
-        user_choice)
+    print "You selected {}-gram.".format(user_choice)
 
     return ngram_options[user_choice]
 
+
+def truncate_chars(ngram, punct, num, chains, input_text):
+    """ given a string, and punctuation, truncate up until the last punct
+    Rerun the random story generation if there is no punct in the story
+    Add a char limit of 140 """
+    while True:
+        for index in reversed(range(0, min(len(ngram), 140))):
+            if ngram[index] == punct:
+                if is_original(ngram[:index+1], input_text.rstrip()):
+                    return ngram[:index+1]
+        ngram = make_text(chains, num)
+
+
+def is_original(ngram, input_text):
+    """ checks if ngram is part of original text """
+    input_text = input_text.replace("\n", " ")
+    return ngram.rstrip() not in input_text.rstrip()
 
 input_path = sys.argv[1:]
 # Open the file and turn it into one long string
